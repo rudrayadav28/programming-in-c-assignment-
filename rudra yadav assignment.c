@@ -4,407 +4,232 @@ sap id 590037426
 */
 
 
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#define FILE_NAME "Students.dat"
+#include <stdio.h>
+#include <string.h>
+
 struct Student {
-    int SAP_ID;
-    long long int Roll_No;
-    char name[60];
-    long long int Phone_No;
-    char Email_Id[45];
-    int Year;
-    int Semester;          // current semester (1-8)
-    float SGPA[8];         // SGPA of semester 1..8
-    float CGPA;
+    int rollNo;
+    char name[50];
+    float marks[5];
+    float total;
+    float percentage;
+    char grade;
+    int pass;
 };
 
-struct Student *s = NULL;
-int count = 0, capacity = 0;
-
-int findIndex(int sap);
-float calcCGPA(int i);
-
-
-void saveToFile() {
-	FILE *fp = fopen(FILE_NAME,"wb");
-	if(fp == NULL) {
-		printf("Warning:could not save to file.\n");
-		return;
-	}
-	int recSize = (int) sizeof(struct Student);
-	fwrite(&recSize, sizeof(int), 1, fp);
-	fwrite(&count,sizeof(int),1,fp);
-	if(count>0)
-		fwrite(s,sizeof(struct Student),count,fp);
-	fclose(fp);
-}
-void loadFromFile() {
-	FILE *fp =fopen(FILE_NAME,"rb");
-	if(fp==NULL)
-		return;
-	
-	int recSize =0,n=0;
-	if(fread(&recSize,sizeof(int),1,fp) !=1 || recSize != (int)sizeof(struct Student)) {
-		printf("Saved file has a different format,so it was ignored.\n");
-		fclose(fp);
-		return;
-	}
-	if (fread(&n, sizeof(int), 1, fp) != 1 || n <= 0) {
-		fclose(fp);
-		return;
-	}
-	s =malloc(n* sizeof(struct Student));
-	if(s==NULL) {
-		printf("Memory Aloocation Failed!\n");
-		fclose(fp);
-		return;
-	}
-	capacity =n;
-	count = (int)fread(s,sizeof(struct Student),n,fp);
-	fclose(fp);
-	printf("Loaded %d record(s) from %s.\n",count,FILE_NAME);
-}
-
-void AcademicAdvisor(struct Student *p)
-{
-    printf("\n========== AI-ASSISTED ACADEMIC ADVISOR ==========\n");
-    printf("Student: %s\n", p->name);
-    printf("CGPA: %.2f\n", p->CGPA);
-
-    if (p->CGPA >= 8.5)
-    {
-        printf("Category: Excellent Performance\n");
-        printf("Advice: Maintain your current study pattern and explore advanced learning opportunities.\n");
-    }
-    else if (p->CGPA >= 7.0)
-    {
-        printf("Category: Good Performance\n");
-        printf("Advice: Keep up the good work and focus on improving weaker subjects.\n");
-    }
-    else if (p->CGPA >= 5.0)
-    {
-        printf("Category: Needs Improvement\n");
-        printf("Advice: Focus more on subjects with lower SGPA and follow a regular study schedule.\n");
-    }
-    else
-    {
-        printf("Category: Requires Immediate Attention\n");
-        printf("Advice: Give immediate attention to weak subjects and seek guidance from faculty.\n");
-    }
-}
-
-void AcademicAdvisorBySAP()
-{
-    int sap;
-
-    printf("\nEnter SAP ID for Academic Advice: ");
-    scanf("%d", &sap);
-
-    int index = findIndex(sap);
-
-    if (index == -1)
-    {
-        printf("Student not found.\n");
-        return;
-    }
-
-    s[index].CGPA = calcCGPA(index);
-    AcademicAdvisor(&s[index]);
-}
-
-
-
-int findIndex(int sap) {
-    for (int i = 0; i < count; i++)
-        if (s[i].SAP_ID == sap) return i;
-    return -1;
-}
-
-
-float calcCGPA(int i) {
-    float total = 0;
-    for (int j = 0; j < s[i].Semester; j++)
-        total += s[i].SGPA[j];
-    return total / s[i].Semester;
-}
-
-void printStudent(struct Student *p) {
-    printf("SAP ID: %d\n", p->SAP_ID);
-    printf("Roll no.: %lld\n", p->Roll_No);
-    printf("Name: %s\n", p->name);
-    printf("Phone no.: %lld\n", p->Phone_No);
-    printf("Email Id: %s\n", p->Email_Id);
-    printf("Year: %d\n", p->Year);
-    printf("Current Semester: %d\n", p->Semester);
-    for (int j = 1; j <= p->Semester; j++)
-        printf("SGPA of Semester %d: %.2f\n", j, p->SGPA[j - 1]);
-    printf("CGPA: %.2f\n", p->CGPA);
-}
-
-
+struct Student students[50];
+int studentCount = 0;
 
 void addStudent() {
-    char choice;
+    int i;
 
-    do {
-        if (count == capacity) {
-            int newCap = (capacity == 0) ? 2 : capacity * 2;
-            struct Student *temp = realloc(s, newCap * sizeof(struct Student));
-            if (temp == NULL) {
-                printf("--------error--------\n");
-                return;                     // old data is still valid in s
-            }
-            s = temp;
-            capacity = newCap;
+    printf("\nEnter Roll Number: ");
+    scanf("%d", &students[studentCount].rollNo);
+
+    printf("Enter Student Name: ");
+    scanf(" %[^\n]", students[studentCount].name);
+
+    students[studentCount].total = 0;
+    students[studentCount].pass = 1;
+
+    printf("\nEnter marks out of 100:\n");
+
+    for (i = 0; i < 5; i++) {
+        printf("Subject %d: ", i + 1);
+        scanf("%f", &students[studentCount].marks[i]);
+
+        students[studentCount].total =
+            students[studentCount].total + students[studentCount].marks[i];
+
+        if (students[studentCount].marks[i] < 40) {
+            students[studentCount].pass = 0;
         }
-
-        printf("\nStudent %d\n", count + 1);
-
-        printf("SAP ID:");
-        scanf("%d", &s[count].SAP_ID);
-        if (findIndex(s[count].SAP_ID) != -1) {
-            printf("A student with this SAP ID already exists.\n");
-        } else {
-            printf("Roll no.:");
-            scanf("%lld", &s[count].Roll_No);
-            printf("Name:");
-            scanf(" %59[^\n]", s[count].name);
-            printf("Phone no.:");
-            scanf("%lld", &s[count].Phone_No);
-            printf("Email Id:");
-            scanf("%44s", s[count].Email_Id);
-
-            do {
-                printf("Year (1-4):");
-                scanf("%d", &s[count].Year);
-            } while (s[count].Year < 1 || s[count].Year > 4);
-
-            do {
-                printf("Current Semester (1-8):");
-                scanf("%d", &s[count].Semester);
-            } while (s[count].Semester < 1 || s[count].Semester > 8);
-
-            for (int i = 1; i <= s[count].Semester; i++) {
-                printf("SGPA of Semester %d:", i);
-                scanf("%f", &s[count].SGPA[i - 1]);
-            }
-
-            s[count].CGPA = calcCGPA(count);
-            count++;
-            saveToFile();
-	  }
-
-        printf("Add another student?(Y/N):");
-        scanf(" %c", &choice);
-
-    } while (choice == 'Y' || choice == 'y');
-}
-
-
-
-void SearchAndDisplay() {
-    int r, found;
-    char again;
-
-    do {
-        found = 0;
-        printf("\nEnter the SAP ID to search:");
-        scanf("%d", &r);
-
-        for (int i = 0; i < count; i++) {
-            if (s[i].SAP_ID == r) {
-                printf("\n-------Student Found with SAP ID %d-------\n", r);
-                printStudent(&s[i]);
-                found = 1;
-                break;
-            }
-        }
-        if (found == 0)
-            printf("Student with the given SAP Id not found.\n");
-
-        printf("\nDo You Want to search Another Student?(y/n):");
-        scanf(" %c", &again);
-    } while (again == 'y' || again == 'Y');
-}
-
-
-
-void CGPA() {
-    if (count == 0) {
-        printf("No records found.\n");
-        return;
     }
-    for (int i = 0; i < count; i++) {
-        s[i].CGPA = calcCGPA(i);
-        printf("CGPA till Semester %d of Student with SAP ID %d is:%.2f\n",
-               s[i].Semester, s[i].SAP_ID, s[i].CGPA);
+
+    students[studentCount].percentage =
+        students[studentCount].total / 5;
+
+    if (students[studentCount].pass == 0) {
+        students[studentCount].grade = 'F';
     }
-}
-
-
-
-void DisplayAllRecords() {
-    if (count == 0) {
-        printf("No records found.\n");
-        return;
+    else if (students[studentCount].percentage >= 90) {
+        students[studentCount].grade = 'A';
     }
-    for (int i = 0; i < count; i++) {
-        printf("\nStudent %d\n", i + 1);
-        printStudent(&s[i]);
+    else if (students[studentCount].percentage >= 80) {
+        students[studentCount].grade = 'B';
     }
-}
-
-
-
-void deleteStudent() {
-    int r;
-    printf("Enter the SAP ID:");
-    scanf("%d", &r);
-
-    int k = findIndex(r);               // -1 means not found
-    if (k == -1)
-        printf("Student not found.\n");
+    else if (students[studentCount].percentage >= 70) {
+        students[studentCount].grade = 'C';
+    }
+    else if (students[studentCount].percentage >= 60) {
+        students[studentCount].grade = 'D';
+    }
     else {
-        for (int j = k; j < count - 1; j++)
-            s[j] = s[j + 1];
-        count--;
-		saveToFile();
-        printf("Record deleted.\n");
+        students[studentCount].grade = 'F';
     }
+
+    studentCount++;
+
+    printf("\nStudent result added successfully!\n");
 }
 
+void displayResults() {
+    int i, j;
 
-
-void DisplayAscendingNumber() {
-    struct Student temp;
-
-    if (count == 0) {
-        printf("No record found.\n");
+    if (studentCount == 0) {
+        printf("\nNo student records available.\n");
         return;
     }
 
-    struct Student *t = malloc(count * sizeof(struct Student));
-    if (t == NULL) {
-        printf("Memory allocation failed!\n");
-        return;
-    }
-    for (int i = 0; i < count; i++)
-        t[i] = s[i];
+    for (i = 0; i < studentCount; i++) {
 
-    for (int i = 0; i < count - 1; i++)
-        for (int j = 0; j < count - 1 - i; j++)
-            if (t[j].SAP_ID > t[j + 1].SAP_ID) {
-                temp = t[j];
-                t[j] = t[j + 1];
-                t[j + 1] = temp;
-            }
+        printf("\n----------------------------\n");
+        printf("Roll Number : %d\n", students[i].rollNo);
+        printf("Name        : %s\n", students[i].name);
 
-    printf("\n--------Records in increasing order of SAP ID--------\n");
-    for (int i = 0; i < count; i++) {
-        printf("\nStudent %d\n", i + 1);
-        printStudent(&t[i]);
-    }
-    free(t);
-}
+        printf("Marks       : ");
 
-
-
-void DisplayAscendingName() {
-    struct Student temp;
-
-    if (count == 0) {
-        printf("No records found.\n");
-        return;
-    }
-
-    struct Student *t = malloc(count * sizeof(struct Student));
-    if (t == NULL) {
-        printf("Memory allocation failed!\n");
-        return;
-    }
-    for (int i = 0; i < count; i++)
-        t[i] = s[i];
-
-    for (int i = 0; i < count - 1; i++)
-        for (int j = 0; j < count - i - 1; j++)
-            if (strcmp(t[j].name, t[j + 1].name) > 0) {
-                temp = t[j];
-                t[j] = t[j + 1];
-                t[j + 1] = temp;
-            }
-
-    printf("\n--------Records in increasing order of Name--------\n");
-    for (int i = 0; i < count; i++) {
-        printf("\nStudent %d\n", i + 1);
-        printStudent(&t[i]);
-    }
-    free(t);
-}
-
-
-
-void CGPAavg() {
-    if (count == 0) {
-        printf("No records found.\n");
-        return;
-    }
-    for (int i = 1; i <= 4; i++) {
-        float total = 0;
-        int q = 0;
-        for (int j = 0; j < count; j++) {
-            if (s[j].Year == i) {
-                total += s[j].CGPA;
-                q++;
-            }
+        for (j = 0; j < 5; j++) {
+            printf("%.1f ", students[i].marks[j]);
         }
-        if (q == 0)
-            printf("Year %d: no students.\n", i);
+
+        printf("\nTotal       : %.1f / 500", students[i].total);
+        printf("\nPercentage  : %.2f%%", students[i].percentage);
+        printf("\nGrade       : %c", students[i].grade);
+
+        if (students[i].pass == 1)
+            printf("\nResult      : PASS\n");
         else
-            printf("The Average CGPA of %d Year Students:%.2f\n", i, total / q);
+            printf("\nResult      : FAIL\n");
     }
+}
+
+void searchStudent() {
+    int roll, i;
+    int found = 0;
+
+    printf("\nEnter Roll Number to search: ");
+    scanf("%d", &roll);
+
+    for (i = 0; i < studentCount; i++) {
+
+        if (students[i].rollNo == roll) {
+
+            printf("\nStudent Found!\n");
+            printf("Name       : %s\n", students[i].name);
+            printf("Total      : %.1f / 500\n", students[i].total);
+            printf("Percentage : %.2f%%\n", students[i].percentage);
+            printf("Grade      : %c\n", students[i].grade);
+
+            if (students[i].pass == 1)
+                printf("Result     : PASS\n");
+            else
+                printf("Result     : FAIL\n");
+
+            found = 1;
+            break;
+        }
+    }
+
+    if (found == 0) {
+        printf("\nStudent not found.\n");
+    }
+}
+
+void showTopper() {
+    int i;
+    int topper = 0;
+
+    if (studentCount == 0) {
+        printf("\nNo student records available.\n");
+        return;
+    }
+
+    for (i = 1; i < studentCount; i++) {
+
+        if (students[i].percentage > students[topper].percentage) {
+            topper = i;
+        }
+    }
+
+    printf("\n----- CLASS TOPPER -----\n");
+    printf("Name       : %s\n", students[topper].name);
+    printf("Roll Number: %d\n", students[topper].rollNo);
+    printf("Percentage : %.2f%%\n", students[topper].percentage);
+    printf("Grade      : %c\n", students[topper].grade);
+}
+
+void classAverage() {
+    int i;
+    float sum = 0;
+    float average;
+
+    if (studentCount == 0) {
+        printf("\nNo student records available.\n");
+        return;
+    }
+
+    for (i = 0; i < studentCount; i++) {
+        sum = sum + students[i].percentage;
+    }
+
+    average = sum / studentCount;
+
+    printf("\nClass Average Percentage: %.2f%%\n", average);
 }
 
 int main() {
+
     int choice;
-loadFromFile();
+
     do {
-        printf("\n========STUDENT RECORD & MANAGEMENT SYSTEM========\n");
-        printf("1. Add Student\n");
-        printf("2. display all Student\n");
-        printf("3. Display in Increasing order of SAP Id\n");
-        printf("4.Display in Increasing order of Name\n");
-        printf("5. Search and Display record of Student\n");
-        printf("6.Delete a student Record\n");
-        printf("7.Calculation of CGPA of student till his current Semester\n");
-        printf("8.Calculation of Average CGPA of all year student\n");
-        printf("9. AI-Assisted Academic Advisor\n");
-        printf("10. Exit\n");
 
-        printf("Enter your choice:");
+        printf("\n====================================");
+        printf("\n  STUDENT RESULT & GRADE ANALYZER");
+        printf("\n====================================");
 
-        if (scanf("%d", &choice) != 1) {
-            while (getchar() != '\n') { }
-            choice = 0;
-        }
+        printf("\n1. Add Student Result");
+        printf("\n2. Display All Results");
+        printf("\n3. Search Student");
+        printf("\n4. Show Class Topper");
+        printf("\n5. Show Class Average");
+        printf("\n6. Exit");
+
+        printf("\n\nEnter your choice: ");
+        scanf("%d", &choice);
+
         switch (choice) {
-            case 1: addStudent(); break;
-            case 2: DisplayAllRecords(); break;
-            case 3: DisplayAscendingNumber(); break;
-            case 4: DisplayAscendingName(); break;
-            case 5: SearchAndDisplay(); break;
-            case 6: deleteStudent(); break;
-            case 7: CGPA(); break;
-            case 8: CGPAavg(); break;
-			case 9: AcademicAdvisorBySAP();break;
-            case 10: printf("Exiting.....\nHave Wonderful day ahead"); break;
-			
-            default: printf("Invalid Choice! Try again.\n");
-        }
-    } while (choice != 10);
 
-    free(s);
+            case 1:
+                addStudent();
+                break;
+
+            case 2:
+                displayResults();
+                break;
+
+            case 3:
+                searchStudent();
+                break;
+
+            case 4:
+                showTopper();
+                break;
+
+            case 5:
+                classAverage();
+                break;
+
+            case 6:
+                printf("\nThank you for using the program!\n");
+                break;
+
+            default:
+                printf("\nInvalid choice. Please try again.\n");
+        }
+
+    } while (choice != 6);
+
     return 0;
 }
 	
